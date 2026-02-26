@@ -1,4 +1,4 @@
-package com.example.petmatch.features.auth.domain.usescases
+package com.example.petmatch.features.auth.domain.usecases
 
 import com.example.petmatch.features.auth.domain.repositories.AuthRepository
 import com.example.petmatch.features.auth.domain.entities.User

@@ -3,8 +3,9 @@ package com.example.petmatch.features.auth.presentation.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.petmatch.core.session.UserSession
-import com.example.petmatch.features.auth.domain.usescases.LoginUseCase
-import com.example.petmatch.features.auth.domain.usescases.RegisterUseCase
+// IMPORTACIONES CORREGIDAS (sin la 's' de más en usecases)
+import com.example.petmatch.features.auth.domain.usecases.LoginUseCase
+import com.example.petmatch.features.auth.domain.usecases.RegisterUseCase
 import com.example.petmatch.features.auth.presentation.screens.AuthUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -34,7 +35,6 @@ class AuthViewModel @Inject constructor(
     private val _telefonoRegister = MutableStateFlow("")
     val telefonoRegister = _telefonoRegister.asStateFlow()
 
-    // NUEVO: Estado para el rol seleccionado (por defecto voluntario)
     private val _roleRegister = MutableStateFlow("voluntario")
     val roleRegister = _roleRegister.asStateFlow()
 
@@ -62,7 +62,7 @@ class AuthViewModel @Inject constructor(
     fun register() {
         _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
-            // Pasamos el _roleRegister.value
+            // Se pasan los 5 parámetros requeridos
             registerUseCase(
                 _nombreRegister.value,
                 _emailRegister.value,
@@ -74,7 +74,9 @@ class AuthViewModel @Inject constructor(
                     userSession.saveSession(user.token, user.role)
                     _uiState.update { it.copy(isLoading = false, isSuccess = true) }
                 },
-                onFailure = { err -> _uiState.update { it.copy(isLoading = false, error = err.message) } }
+                onFailure = { err ->
+                    _uiState.update { it.copy(isLoading = false, error = err.message ?: "Error desconocido") }
+                }
             )
         }
     }
