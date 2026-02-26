@@ -57,7 +57,6 @@ android {
     }
 }
 
-// Esta es la forma más compatible de configurar Java en Kotlin
 tasks.withType<KotlinCompile>().configureEach {
     kotlinOptions {
         jvmTarget = "17"
@@ -65,7 +64,6 @@ tasks.withType<KotlinCompile>().configureEach {
 }
 
 dependencies {
-    // Usamos los nombres exactos del catálogo
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -86,6 +84,11 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
+
+    // ROOM
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
