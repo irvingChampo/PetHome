@@ -1,14 +1,13 @@
 package com.example.petmatch.features.petmatch.domain.usescases
 
-import com.example.petmatch.features.petmatch.domain.entities.Pet
 import com.example.petmatch.features.petmatch.domain.repositories.PetMatchRepository
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class GetPetsUseCase @Inject constructor(
+class RefreshDataUseCase @Inject constructor(
     private val repository: PetMatchRepository
 ) {
-    operator fun invoke(): Flow<List<Pet>> {
-        return repository.getPets()
+    suspend operator fun invoke() {
+        repository.refreshPets()
+        repository.refreshHomes()
     }
 }
