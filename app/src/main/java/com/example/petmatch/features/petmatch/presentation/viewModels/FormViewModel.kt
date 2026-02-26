@@ -23,7 +23,9 @@ class FormViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(FormUiState())
     val uiState = _uiState.asStateFlow()
 
-    // Estados para Mascotas
+    private val _errorFlow = MutableSharedFlow<String>()
+    val errorFlow = _errorFlow.asSharedFlow()
+
     private val _petNombre = MutableStateFlow("")
     val petNombre = _petNombre.asStateFlow()
     private val _petEspecie = MutableStateFlow("Perro")
@@ -31,7 +33,6 @@ class FormViewModel @Inject constructor(
     private val _petEdad = MutableStateFlow("")
     val petEdad = _petEdad.asStateFlow()
 
-    // Estados para Hogares
     private val _homeNombre = MutableStateFlow("")
     val homeNombre = _homeNombre.asStateFlow()
     private val _homeDireccion = MutableStateFlow("")
@@ -43,7 +44,6 @@ class FormViewModel @Inject constructor(
     private val _homeTipo = MutableStateFlow("Perros")
     val homeTipo = _homeTipo.asStateFlow()
 
-    // Funciones de actualización de UI
     fun updatePetNombre(v: String) { _petNombre.value = v }
     fun updatePetEspecie(v: String) { _petEspecie.value = v }
     fun updatePetEdad(v: String) { _petEdad.value = v }
@@ -61,11 +61,9 @@ class FormViewModel @Inject constructor(
         _homeNombre.value = n; _homeDireccion.value = d; _homeCapacidad.value = c; _homeTipo.value = t
     }
 
-    // --- OPERACIONES PROTEGIDAS POR ROL ---
-
     fun savePet(id: Int = 0) {
         if (!userSession.isAdmin()) {
-            _uiState.update { it.copy(error = "Acceso denegado: Se requiere rol Admin") }
+            viewModelScope.launch { _errorFlow.emit("Acceso denegado: Se requiere rol Admin") }
             return
         }
         _uiState.update { it.copy(isLoading = true) }
@@ -75,14 +73,15 @@ class FormViewModel @Inject constructor(
                 if (id == 0) repository.createPet(pet) else repository.updatePet(pet)
                 _uiState.update { it.copy(isLoading = false, isSuccess = true) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message) }
+                _uiState.update { it.copy(isLoading = false) }
+                _errorFlow.emit(e.message ?: "Error desconocido")
             }
         }
     }
 
     fun saveHome(id: Int = 0) {
         if (!userSession.isVoluntario()) {
-            _uiState.update { it.copy(error = "Acceso denegado: Se requiere rol Voluntario") }
+            viewModelScope.launch { _errorFlow.emit("Acceso denegado: Se requiere rol Voluntario") }
             return
         }
         _uiState.update { it.copy(isLoading = true) }
@@ -92,7 +91,8 @@ class FormViewModel @Inject constructor(
                 if (id == 0) repository.createHome(home, _homeTelefono.value) else repository.updateHome(home, _homeTelefono.value)
                 _uiState.update { it.copy(isLoading = false, isSuccess = true) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message) }
+                _uiState.update { it.copy(isLoading = false) }
+                _errorFlow.emit(e.message ?: "Error desconocido")
             }
         }
     }
@@ -107,12 +107,15 @@ class FormViewModel @Inject constructor(
 
     fun assignPetToHome(petId: Int, homeId: Int, currentOccupancy: Int) {
         if (!userSession.isAdmin()) return
-        _uiState.update { it.copy(isLoading = true, error = null) }
+        _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             val result = assignPetUseCase(petId, homeId, currentOccupancy)
             result.fold(
                 onSuccess = { _uiState.update { it.copy(isLoading = false, isSuccess = true) } },
-                onFailure = { exception -> _uiState.update { it.copy(isLoading = false, error = exception.message) } }
+                onFailure = { exception ->
+                    _uiState.update { it.copy(isLoading = false) }
+                    _errorFlow.emit(exception.message ?: "Error al asignar")
+                }
             )
         }
     }

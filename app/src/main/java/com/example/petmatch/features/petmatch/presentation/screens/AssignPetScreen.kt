@@ -1,5 +1,6 @@
 package com.example.petmatch.features.petmatch.presentation.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -20,15 +22,19 @@ import com.example.petmatch.features.petmatch.presentation.viewmodels.FormViewMo
 fun AssignPetScreen(
     petId: Int,
     petName: String,
-    formViewModel: FormViewModel = hiltViewModel(), // Añadido valor por defecto
-    dashboardViewModel: DashboardViewModel = hiltViewModel(), // Añadido valor por defecto
+    formViewModel: FormViewModel = hiltViewModel(),
+    dashboardViewModel: DashboardViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
     val formState by formViewModel.uiState.collectAsState()
     val dashState by dashboardViewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
+    LaunchedEffect(Unit) { dashboardViewModel.loadData() }
     LaunchedEffect(Unit) {
-        dashboardViewModel.loadData()
+        formViewModel.errorFlow.collect { errorMessage ->
+            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+        }
     }
 
     if (formState.isSuccess) {
@@ -47,11 +53,7 @@ fun AssignPetScreen(
         }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            Text(
-                "Selecciona un hogar disponible:",
-                modifier = Modifier.padding(16.dp),
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text("Selecciona un hogar disponible:", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
 
             if (dashState.isLoading) {
                 Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
@@ -69,17 +71,11 @@ fun AssignPetScreen(
                                 },
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                         ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
+                            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {
                                     Text(hogar.nombreVoluntario, fontWeight = FontWeight.Bold)
                                     Text(hogar.direccion, style = MaterialTheme.typography.bodySmall)
-                                    Text(
-                                        "Ocupación: ${hogar.ocupacionActual}/${hogar.capacidad}",
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
+                                    Text("Ocupación: ${hogar.ocupacionActual}/${hogar.capacidad}", color = MaterialTheme.colorScheme.primary)
                                 }
                                 if (formState.isLoading) {
                                     CircularProgressIndicator(Modifier.size(24.dp))
@@ -90,10 +86,6 @@ fun AssignPetScreen(
                         }
                     }
                 }
-            }
-
-            formState.error?.let {
-                Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(16.dp))
             }
 
             Button(

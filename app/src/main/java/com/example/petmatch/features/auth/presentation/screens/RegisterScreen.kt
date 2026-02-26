@@ -1,5 +1,6 @@
 package com.example.petmatch.features.auth.presentation.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -8,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -27,9 +29,16 @@ fun RegisterScreen(
     val password by viewModel.passwordRegister.collectAsState()
     val telefono by viewModel.telefonoRegister.collectAsState()
     val roleSelected by viewModel.roleRegister.collectAsState()
+    val context = LocalContext.current
 
     if (state.isSuccess) {
         LaunchedEffect(Unit) { onRegisterSuccess() }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.errorFlow.collect { errorMessage ->
+            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+        }
     }
 
     Column(
@@ -50,7 +59,6 @@ fun RegisterScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        // SECCIÓN DE SELECCIÓN DE ROL
         Text("Selecciona tu rol:", fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             RadioButton(selected = roleSelected == "voluntario", onClick = { viewModel.updateRoleRegister("voluntario") })
@@ -58,10 +66,6 @@ fun RegisterScreen(
             Spacer(Modifier.width(16.dp))
             RadioButton(selected = roleSelected == "admin", onClick = { viewModel.updateRoleRegister("admin") })
             Text("Administrador")
-        }
-
-        if (state.error != null) {
-            Text(state.error!!, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
         }
 
         Button(

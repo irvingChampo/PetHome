@@ -1,10 +1,12 @@
 package com.example.petmatch.features.auth.presentation.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -19,9 +21,16 @@ fun LoginScreen(
     val state by viewModel.uiState.collectAsState()
     val email by viewModel.emailLogin.collectAsState()
     val pass by viewModel.passwordLogin.collectAsState()
+    val context = LocalContext.current
 
     if (state.isSuccess) {
         LaunchedEffect(Unit) { onLoginSuccess() }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.errorFlow.collect { errorMessage ->
+            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+        }
     }
 
     Column(
@@ -45,9 +54,6 @@ fun LoginScreen(
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
-        if (state.error != null) {
-            Text(state.error!!, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
-        }
         Button(
             onClick = { viewModel.login() },
             modifier = Modifier.fillMaxWidth().padding(top = 24.dp),

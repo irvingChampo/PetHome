@@ -1,10 +1,12 @@
 package com.example.petmatch.features.petmatch.presentation.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.petmatch.features.petmatch.presentation.viewmodels.FormViewModel
@@ -23,9 +25,16 @@ fun PetFormScreen(
     val nombre by viewModel.petNombre.collectAsState()
     val especie by viewModel.petEspecie.collectAsState()
     val edad by viewModel.petEdad.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.loadInitialPetData(initialName, initialSpecie, initialAge)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.errorFlow.collect { errorMessage ->
+            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+        }
     }
 
     if (state.isSuccess) {

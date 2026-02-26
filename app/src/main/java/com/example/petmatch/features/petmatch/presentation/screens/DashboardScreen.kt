@@ -1,5 +1,6 @@
 package com.example.petmatch.features.petmatch.presentation.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.petmatch.features.petmatch.presentation.components.HomeCard
@@ -31,14 +33,19 @@ fun DashboardScreen(
     val state by viewModel.uiState.collectAsState()
     val isAdmin = viewModel.isAdmin
     val isVoluntario = viewModel.isVoluntario
+    val context = LocalContext.current
 
-    // El admin inicia en Mascotas (0), el voluntario inicia en Hogares (1)
     var selectedTab by remember { mutableIntStateOf(if (isAdmin) 0 else 1) }
-
     var showDeleteDialog by remember { mutableStateOf(false) }
     var itemToDeleteId by remember { mutableIntStateOf(-1) }
 
     LaunchedEffect(Unit) { viewModel.loadData() }
+
+    LaunchedEffect(Unit) {
+        viewModel.errorFlow.collect { errorMessage ->
+            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+        }
+    }
 
     if (showDeleteDialog) {
         AlertDialog(
@@ -60,26 +67,15 @@ fun DashboardScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "PetMatch - ${if (isAdmin) "Administrador" else "Voluntario"}",
-                        color = Color.White
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                title = { Text("PetMatch - ${if (isAdmin) "Administrador" else "Voluntario"}", color = Color.White) },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
             )
         },
         floatingActionButton = {
-            // EL BOTÓN (+) SOLO APARECE SI ESTÁS EN TU PESTAÑA CORRESPONDIENTE
             val showFab = (selectedTab == 0 && isAdmin) || (selectedTab == 1 && isVoluntario)
-
             if (showFab) {
                 FloatingActionButton(
-                    onClick = {
-                        if (selectedTab == 0) onNavigateToAddPet() else onNavigateToAddHome()
-                    },
+                    onClick = { if (selectedTab == 0) onNavigateToAddPet() else onNavigateToAddHome() },
                     containerColor = MaterialTheme.colorScheme.secondary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Agregar", tint = Color.White)
@@ -89,22 +85,12 @@ fun DashboardScreen(
     ) { padding ->
         Column(Modifier.padding(padding)) {
             TabRow(selectedTabIndex = selectedTab) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    text = { Text("Mascotas") }
-                )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    text = { Text("Hogares") }
-                )
+                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("Mascotas") })
+                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("Hogares") })
             }
 
             if (state.isLoading) {
-                Box(Modifier.fillMaxSize(), Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
             } else {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(8.dp)) {
                     if (selectedTab == 0) {
@@ -122,9 +108,7 @@ fun DashboardScreen(
                             HomeCard(
                                 home = home,
                                 isVoluntario = isVoluntario,
-                                onEdit = {
-                                    onNavigateToEditHome(it.id, it.nombreVoluntario, it.direccion, it.capacidad, it.tipoMascotaAceptada)
-                                },
+                                onEdit = { onNavigateToEditHome(it.id, it.nombreVoluntario, it.direccion, it.capacidad, it.tipoMascotaAceptada) },
                                 onDelete = { itemToDeleteId = it; showDeleteDialog = true }
                             )
                         }

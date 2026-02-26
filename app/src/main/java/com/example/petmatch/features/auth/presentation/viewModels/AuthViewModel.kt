@@ -3,7 +3,6 @@ package com.example.petmatch.features.auth.presentation.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.petmatch.core.session.UserSession
-// IMPORTACIONES CORREGIDAS (sin la 's' de más en usecases)
 import com.example.petmatch.features.auth.domain.usecases.LoginUseCase
 import com.example.petmatch.features.auth.domain.usecases.RegisterUseCase
 import com.example.petmatch.features.auth.presentation.screens.AuthUiState
@@ -20,6 +19,9 @@ class AuthViewModel @Inject constructor(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState = _uiState.asStateFlow()
+
+    private val _errorFlow = MutableSharedFlow<String>()
+    val errorFlow = _errorFlow.asSharedFlow()
 
     private val _emailLogin = MutableStateFlow("")
     val emailLogin = _emailLogin.asStateFlow()
@@ -47,22 +49,24 @@ class AuthViewModel @Inject constructor(
     fun updateRoleRegister(role: String) { _roleRegister.value = role }
 
     fun login() {
-        _uiState.update { it.copy(isLoading = true, error = null) }
+        _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             loginUseCase(_emailLogin.value, _passwordLogin.value).fold(
                 onSuccess = { user ->
                     userSession.saveSession(user.token, user.role)
                     _uiState.update { it.copy(isLoading = false, isSuccess = true) }
                 },
-                onFailure = { _uiState.update { it.copy(isLoading = false, error = "Credenciales inválidas") } }
+                onFailure = {
+                    _uiState.update { it.copy(isLoading = false) }
+                    _errorFlow.emit("Credenciales inválidas")
+                }
             )
         }
     }
 
     fun register() {
-        _uiState.update { it.copy(isLoading = true, error = null) }
+        _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            // Se pasan los 5 parámetros requeridos
             registerUseCase(
                 _nombreRegister.value,
                 _emailRegister.value,
@@ -75,7 +79,8 @@ class AuthViewModel @Inject constructor(
                     _uiState.update { it.copy(isLoading = false, isSuccess = true) }
                 },
                 onFailure = { err ->
-                    _uiState.update { it.copy(isLoading = false, error = err.message ?: "Error desconocido") }
+                    _uiState.update { it.copy(isLoading = false) }
+                    _errorFlow.emit(err.message ?: "Error desconocido")
                 }
             )
         }
