@@ -102,6 +102,7 @@ fun AppNavigation() {
                 navArgument("petName") { type = NavType.StringType }
             )
         ) { backStack ->
+            // Ahora llama a AssignPetScreen sin errores de parámetros
             AssignPetScreen(
                 petId = backStack.arguments?.getInt("petId") ?: 0,
                 petName = backStack.arguments?.getString("petName") ?: "",

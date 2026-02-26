@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.petmatch.features.petmatch.presentation.viewmodels.DashboardViewModel
 import com.example.petmatch.features.petmatch.presentation.viewmodels.FormViewModel
 
@@ -19,14 +20,13 @@ import com.example.petmatch.features.petmatch.presentation.viewmodels.FormViewMo
 fun AssignPetScreen(
     petId: Int,
     petName: String,
-    formViewModel: FormViewModel,
-    dashboardViewModel: DashboardViewModel,
+    formViewModel: FormViewModel = hiltViewModel(), // Añadido valor por defecto
+    dashboardViewModel: DashboardViewModel = hiltViewModel(), // Añadido valor por defecto
     onBack: () -> Unit
 ) {
     val formState by formViewModel.uiState.collectAsState()
     val dashState by dashboardViewModel.uiState.collectAsState()
 
-    // Cargar hogares al iniciar
     LaunchedEffect(Unit) {
         dashboardViewModel.loadData()
     }
@@ -57,7 +57,6 @@ fun AssignPetScreen(
                 Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
             } else {
                 LazyColumn(Modifier.weight(1f)) {
-                    // Solo mostrar hogares con capacidad disponible
                     val hogaresDisponibles = dashState.hogares.filter { it.ocupacionActual < it.capacidad }
 
                     items(hogaresDisponibles) { hogar ->

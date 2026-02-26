@@ -21,7 +21,6 @@ class FormViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(FormUiState())
     val uiState = _uiState.asStateFlow()
 
-    // Form Mascotas
     private val _petNombre = MutableStateFlow("")
     val petNombre = _petNombre.asStateFlow()
     private val _petEspecie = MutableStateFlow("Perro")
@@ -29,7 +28,6 @@ class FormViewModel @Inject constructor(
     private val _petEdad = MutableStateFlow("")
     val petEdad = _petEdad.asStateFlow()
 
-    // Form Hogares
     private val _homeNombre = MutableStateFlow("")
     val homeNombre = _homeNombre.asStateFlow()
     private val _homeDireccion = MutableStateFlow("")
@@ -83,12 +81,14 @@ class FormViewModel @Inject constructor(
     fun deletePet(id: Int) = viewModelScope.launch { repository.deletePet(id) }
     fun deleteHome(id: Int) = viewModelScope.launch { repository.deleteHome(id) }
 
-    fun assignPetToHome(petId: Int, homeId: Int, occ: Int) {
-        _uiState.update { it.copy(isLoading = true) }
+    fun assignPetToHome(petId: Int, homeId: Int, currentOccupancy: Int) {
+        _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
-            assignPetUseCase(petId, homeId, occ).fold(
+            val result = assignPetUseCase(petId, homeId, currentOccupancy)
+            result.fold(
                 onSuccess = { _uiState.update { it.copy(isLoading = false, isSuccess = true) } },
-                onFailure = { _uiState.update { it.copy(isLoading = false, error = it.message) } }
+                // Cambiado 'error' por 'exception' para evitar conflicto con FormUiState.error
+                onFailure = { exception -> _uiState.update { it.copy(isLoading = false, error = exception.message) } }
             )
         }
     }
