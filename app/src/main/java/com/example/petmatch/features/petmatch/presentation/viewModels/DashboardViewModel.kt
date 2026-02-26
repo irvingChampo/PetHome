@@ -2,6 +2,7 @@ package com.example.petmatch.features.petmatch.presentation.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.petmatch.core.session.UserSession
 import com.example.petmatch.features.petmatch.domain.usescases.GetHomesUseCase
 import com.example.petmatch.features.petmatch.domain.usescases.GetPetsUseCase
 import com.example.petmatch.features.petmatch.presentation.screens.DashboardUiState
@@ -15,11 +16,16 @@ import javax.inject.Inject
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val getPetsUseCase: GetPetsUseCase,
-    private val getHomesUseCase: GetHomesUseCase
+    private val getHomesUseCase: GetHomesUseCase,
+    private val userSession: UserSession
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState = _uiState.asStateFlow()
+
+    // Propiedades para que la UI sepa qué rol tiene el usuario
+    val isAdmin: Boolean = userSession.isAdmin()
+    val isVoluntario: Boolean = userSession.isVoluntario()
 
     init {
         loadData()
@@ -36,7 +42,7 @@ class DashboardViewModel @Inject constructor(
                     isLoading = false,
                     mascotas = petsResult.getOrDefault(emptyList()),
                     hogares = homesResult.getOrDefault(emptyList()),
-                    error = if (petsResult.isFailure) "Error de conexión" else null
+                    error = if (petsResult.isFailure) "Error de conexión con el servidor" else null
                 )
             }
         }

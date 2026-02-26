@@ -29,7 +29,12 @@ fun DashboardScreen(
     onNavigateToAssign: (Int, String) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
-    var selectedTab by remember { mutableIntStateOf(0) }
+    val isAdmin = viewModel.isAdmin
+    val isVoluntario = viewModel.isVoluntario
+
+    // El admin inicia en Mascotas (0), el voluntario inicia en Hogares (1)
+    var selectedTab by remember { mutableIntStateOf(if (isAdmin) 0 else 1) }
+
     var showDeleteDialog by remember { mutableStateOf(false) }
     var itemToDeleteId by remember { mutableIntStateOf(-1) }
 
@@ -38,8 +43,8 @@ fun DashboardScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Confirmar") },
-            text = { Text("¿Deseas eliminar este registro?") },
+            title = { Text("Confirmar Eliminación") },
+            text = { Text("¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.") },
             confirmButton = {
                 TextButton(onClick = {
                     if (selectedTab == 0) formViewModel.deletePet(itemToDeleteId)
@@ -55,35 +60,73 @@ fun DashboardScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("PetMatch", color = Color.White) },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
+                title = {
+                    Text(
+                        "PetMatch - ${if (isAdmin) "Administrador" else "Voluntario"}",
+                        color = Color.White
+                    )
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { if (selectedTab == 0) onNavigateToAddPet() else onNavigateToAddHome() }) {
-                Icon(Icons.Default.Add, contentDescription = null)
+            // EL BOTÓN (+) SOLO APARECE SI ESTÁS EN TU PESTAÑA CORRESPONDIENTE
+            val showFab = (selectedTab == 0 && isAdmin) || (selectedTab == 1 && isVoluntario)
+
+            if (showFab) {
+                FloatingActionButton(
+                    onClick = {
+                        if (selectedTab == 0) onNavigateToAddPet() else onNavigateToAddHome()
+                    },
+                    containerColor = MaterialTheme.colorScheme.secondary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Agregar", tint = Color.White)
+                }
             }
         }
     ) { padding ->
         Column(Modifier.padding(padding)) {
             TabRow(selectedTabIndex = selectedTab) {
-                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("Mascotas") })
-                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("Hogares") })
+                Tab(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    text = { Text("Mascotas") }
+                )
+                Tab(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    text = { Text("Hogares") }
+                )
             }
 
             if (state.isLoading) {
-                Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
+                Box(Modifier.fillMaxSize(), Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             } else {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(8.dp)) {
                     if (selectedTab == 0) {
                         items(state.mascotas) { pet ->
-                            PetCard(pet, onEdit = { onNavigateToEditPet(it.id, it.nombre, it.especie, it.edad) },
-                                onDelete = { itemToDeleteId = it; showDeleteDialog = true }, onAssignClick = onNavigateToAssign)
+                            PetCard(
+                                pet = pet,
+                                isAdmin = isAdmin,
+                                onEdit = { onNavigateToEditPet(it.id, it.nombre, it.especie, it.edad) },
+                                onDelete = { itemToDeleteId = it; showDeleteDialog = true },
+                                onAssignClick = onNavigateToAssign
+                            )
                         }
                     } else {
                         items(state.hogares) { home ->
-                            HomeCard(home, onEdit = { onNavigateToEditHome(it.id, it.nombreVoluntario, it.direccion, it.capacidad, it.tipoMascotaAceptada) },
-                                onDelete = { itemToDeleteId = it; showDeleteDialog = true })
+                            HomeCard(
+                                home = home,
+                                isVoluntario = isVoluntario,
+                                onEdit = {
+                                    onNavigateToEditHome(it.id, it.nombreVoluntario, it.direccion, it.capacidad, it.tipoMascotaAceptada)
+                                },
+                                onDelete = { itemToDeleteId = it; showDeleteDialog = true }
+                            )
                         }
                     }
                 }

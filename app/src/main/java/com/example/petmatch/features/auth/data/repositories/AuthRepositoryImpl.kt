@@ -2,6 +2,7 @@ package com.example.petmatch.features.auth.data.repositories
 
 import com.example.petmatch.features.auth.data.datasources.remote.api.AuthApi
 import com.example.petmatch.features.auth.data.datasources.remote.model.*
+import com.example.petmatch.features.auth.data.datasources.remote.mapper.toDomain
 import com.example.petmatch.features.auth.domain.entities.User
 import com.example.petmatch.features.auth.domain.repositories.AuthRepository
 import javax.inject.Inject
@@ -16,8 +17,9 @@ class AuthRepositoryImpl @Inject constructor(
         Result.failure(e)
     }
 
-    override suspend fun registro(n: String, e: String, p: String, t: String): Result<User> = try {
-        val response = api.registro(RegisterRequest(n, e, p, t))
+    override suspend fun registro(n: String, e: String, p: String, t: String, r: String): Result<User> = try {
+        // Pasamos el nuevo parámetro "r" al RegisterRequest
+        val response = api.registro(RegisterRequest(n, e, p, t, r))
         Result.success(response.toDomain())
     } catch (e: Exception) {
         Result.failure(e)

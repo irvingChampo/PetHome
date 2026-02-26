@@ -4,11 +4,12 @@ import com.example.petmatch.features.auth.data.datasources.remote.model.AuthResp
 import com.example.petmatch.features.auth.domain.entities.User
 
 /**
- * Convierte el DTO de la API
- * al modelo de dominio que usa la App.
+ * Convierte el DTO de la API (AuthResponse)
+ * al modelo de dominio (User) incluyendo el Rol.
  */
 fun AuthResponse.toDomain(): User {
     return User(
-        token = this.token
+        token = this.token,
+        role = this.rol ?: "voluntario"
     )
 }

@@ -16,6 +16,7 @@ import com.example.petmatch.features.petmatch.domain.entities.Pet
 @Composable
 fun PetCard(
     pet: Pet,
+    isAdmin: Boolean, // Nuevo parámetro para control de rol
     onEdit: (Pet) -> Unit,
     onDelete: (Int) -> Unit,
     onAssignClick: (Int, String) -> Unit
@@ -30,12 +31,16 @@ fun PetCard(
                     Text(pet.nombre, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Text("${pet.especie} • ${pet.edad} años")
                 }
-                Row {
-                    IconButton(onClick = { onEdit(pet) }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary)
-                    }
-                    IconButton(onClick = { onDelete(pet.id) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color(0xFFE63946))
+
+                // SOLO EL ADMIN PUEDE EDITAR O ELIMINAR MASCOTAS
+                if (isAdmin) {
+                    Row {
+                        IconButton(onClick = { onEdit(pet) }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary)
+                        }
+                        IconButton(onClick = { onDelete(pet.id) }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color(0xFFE63946))
+                        }
                     }
                 }
             }
@@ -49,7 +54,8 @@ fun PetCard(
                 Text(pet.estado, Modifier.padding(horizontal = 8.dp, vertical = 4.dp), Color.White)
             }
 
-            if (pet.estado == "Sin hogar") {
+            // SOLO EL ADMIN PUEDE ASIGNAR UN HOGAR
+            if (isAdmin && pet.estado == "Sin hogar") {
                 Button(
                     onClick = { onAssignClick(pet.id, pet.nombre) },
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),

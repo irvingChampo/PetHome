@@ -15,6 +15,7 @@ import com.example.petmatch.features.petmatch.domain.entities.Home
 @Composable
 fun HomeCard(
     home: Home,
+    isVoluntario: Boolean, // Nuevo parámetro para control de rol
     onEdit: (Home) -> Unit,
     onDelete: (Int) -> Unit
 ) {
@@ -22,12 +23,16 @@ fun HomeCard(
         Column(Modifier.padding(16.dp)) {
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
                 Text(home.nombreVoluntario, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f))
-                Row {
-                    IconButton(onClick = { onEdit(home) }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary)
-                    }
-                    IconButton(onClick = { onDelete(home.id) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color(0xFFE63946))
+
+                // SOLO EL VOLUNTARIO PUEDE EDITAR O ELIMINAR HOGARES
+                if (isVoluntario) {
+                    Row {
+                        IconButton(onClick = { onEdit(home) }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary)
+                        }
+                        IconButton(onClick = { onDelete(home.id) }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color(0xFFE63946))
+                        }
                     }
                 }
             }
