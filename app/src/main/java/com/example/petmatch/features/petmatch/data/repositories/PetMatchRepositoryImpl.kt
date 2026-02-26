@@ -69,14 +69,20 @@ class PetMatchRepositoryImpl @Inject constructor(
     }
 
     override suspend fun assignPetToHome(petId: Int, homeId: Int, currentOccupancy: Int): Boolean {
+        // Actualizamos la BD local de inmediato
+        dao.updatePetState(petId, "En acogida")
+        dao.updateHomeOccupancy(homeId, currentOccupancy + 1)
+
         return try {
+            // Intento de actualizar en el servidor API
             api.patchMascota(petId, mapOf("estado" to "En acogida", "hogarId" to homeId.toString()))
             api.patchHogar(homeId, mapOf("ocupacionActual" to currentOccupancy + 1))
-            dao.updatePetState(petId, "En acogida")
-            dao.updateHomeOccupancy(homeId, currentOccupancy + 1)
             true
         } catch (e: Exception) {
-            false
+            // 3. ROLLBACK Si el servidor falla, revertimos los cambios locales
+            dao.updatePetState(petId, "Sin hogar")
+            dao.updateHomeOccupancy(homeId, currentOccupancy)
+            throw Exception("El servidor falló. Cambios revertidos en pantalla.")
         }
     }
 }

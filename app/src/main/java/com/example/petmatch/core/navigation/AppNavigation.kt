@@ -1,6 +1,8 @@
 package com.example.petmatch.core.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -8,6 +10,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.petmatch.features.auth.presentation.screens.*
 import com.example.petmatch.features.petmatch.presentation.screens.*
+import com.example.petmatch.features.petmatch.presentation.viewmodels.DashboardViewModel
 
 @Composable
 fun AppNavigation() {
@@ -102,10 +105,16 @@ fun AppNavigation() {
                 navArgument("petName") { type = NavType.StringType }
             )
         ) { backStack ->
-            // Ahora llama a AssignPetScreen sin errores de parámetros
+
+            val dashboardEntry = remember(backStack) {
+                navController.getBackStackEntry(PetMatchScreens.Dashboard.route)
+            }
+            val sharedDashboardViewModel: DashboardViewModel = hiltViewModel(dashboardEntry)
+
             AssignPetScreen(
                 petId = backStack.arguments?.getInt("petId") ?: 0,
                 petName = backStack.arguments?.getString("petName") ?: "",
+                dashboardViewModel = sharedDashboardViewModel,
                 onBack = { navController.popBackStack() }
             )
         }
