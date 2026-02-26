@@ -5,14 +5,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.petmatch.features.petmatch.domain.entities.Home
 import com.example.petmatch.features.petmatch.domain.entities.Pet
 import com.example.petmatch.features.petmatch.domain.repositories.PetMatchRepository
-import com.example.petmatch.features.petmatch.domain.usecases.AssignPetUseCase
+import com.example.petmatch.features.petmatch.domain.usescases.AssignPetUseCase
 import com.example.petmatch.features.petmatch.presentation.screens.FormUiState
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class FormViewModel(
+@HiltViewModel
+class FormViewModel @Inject constructor(
     private val repository: PetMatchRepository,
     private val assignPetUseCase: AssignPetUseCase
 ) : ViewModel() {
@@ -20,146 +21,77 @@ class FormViewModel(
     private val _uiState = MutableStateFlow(FormUiState())
     val uiState = _uiState.asStateFlow()
 
-    // HOT FLOWS PARA EL FORMULARIO DE MASCOTAS
+    // Form Mascotas
     private val _petNombre = MutableStateFlow("")
     val petNombre = _petNombre.asStateFlow()
-
     private val _petEspecie = MutableStateFlow("Perro")
     val petEspecie = _petEspecie.asStateFlow()
-
     private val _petEdad = MutableStateFlow("")
     val petEdad = _petEdad.asStateFlow()
 
-    fun updatePetNombre(nombre: String) { _petNombre.value = nombre }
-    fun updatePetEspecie(especie: String) { _petEspecie.value = especie }
-    fun updatePetEdad(edad: String) { _petEdad.value = edad }
-
-    fun loadInitialPetData(nombre: String, especie: String, edad: String) {
-        _petNombre.value = nombre
-        _petEspecie.value = if(especie.isNotEmpty()) especie else "Perro"
-        _petEdad.value = edad
-    }
-
-    fun savePet(id: Int = 0) {
-        val nombre = _petNombre.value
-        val especie = _petEspecie.value
-        val edad = _petEdad.value
-
-        if (nombre.isBlank() || especie.isBlank() || edad.isBlank()) {
-            _uiState.update { it.copy(error = "Rellena todos los campos") }
-            return
-        }
-        _uiState.update { it.copy(isLoading = true, error = null) }
-        viewModelScope.launch {
-            try {
-                val pet = Pet(id, nombre.trim(), especie, edad.toIntOrNull() ?: 0, "Saludable", "Sin hogar", null)
-                if (id == 0) repository.createPet(pet) else repository.updatePet(pet)
-                _uiState.update { it.copy(isLoading = false, isSuccess = true) }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message) }
-            }
-        }
-    }
-
-    fun deletePet(id: Int) {
-        _uiState.update { it.copy(isLoading = true) }
-        viewModelScope.launch {
-            try {
-                repository.deletePet(id)
-                _uiState.update { it.copy(isLoading = false, isSuccess = true) }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "No se pudo eliminar") }
-            }
-        }
-    }
-
-    // HOT FLOWS PARA EL FORMULARIO DE HOGARES
+    // Form Hogares
     private val _homeNombre = MutableStateFlow("")
     val homeNombre = _homeNombre.asStateFlow()
-
     private val _homeDireccion = MutableStateFlow("")
     val homeDireccion = _homeDireccion.asStateFlow()
-
     private val _homeTelefono = MutableStateFlow("")
     val homeTelefono = _homeTelefono.asStateFlow()
-
     private val _homeCapacidad = MutableStateFlow("")
     val homeCapacidad = _homeCapacidad.asStateFlow()
-
     private val _homeTipo = MutableStateFlow("Perros")
     val homeTipo = _homeTipo.asStateFlow()
 
+    fun updatePetNombre(v: String) { _petNombre.value = v }
+    fun updatePetEspecie(v: String) { _petEspecie.value = v }
+    fun updatePetEdad(v: String) { _petEdad.value = v }
+    fun updateHomeNombre(v: String) { _homeNombre.value = v }
+    fun updateHomeDireccion(v: String) { _homeDireccion.value = v }
+    fun updateHomeTelefono(v: String) { _homeTelefono.value = v }
+    fun updateHomeCapacidad(v: String) { _homeCapacidad.value = v }
+    fun updateHomeTipo(v: String) { _homeTipo.value = v }
 
-    fun updateHomeNombre(nombre: String) { _homeNombre.value = nombre }
-    fun updateHomeDireccion(direccion: String) { _homeDireccion.value = direccion }
-    fun updateHomeTelefono(telefono: String) { _homeTelefono.value = telefono }
-    fun updateHomeCapacidad(capacidad: String) { _homeCapacidad.value = capacidad }
-    fun updateHomeTipo(tipo: String) { _homeTipo.value = tipo }
-
-    fun loadInitialHomeData(nombre: String, direccion: String, capacidad: String, tipo: String) {
-        _homeNombre.value = nombre
-        _homeDireccion.value = direccion
-        _homeCapacidad.value = capacidad
-        _homeTipo.value = if(tipo.isNotEmpty()) tipo else "Perros"
-        _homeTelefono.value = ""
+    fun loadInitialPetData(n: String, s: String, a: String) {
+        _petNombre.value = n; _petEspecie.value = s; _petEdad.value = a
     }
 
-    fun saveHome(id: Int = 0) {
-        val nombre = _homeNombre.value
-        val direccion = _homeDireccion.value
-        val telefono = _homeTelefono.value
-        val capacidad = _homeCapacidad.value
-        val tipo = _homeTipo.value
-
-        if (nombre.isBlank() || direccion.isBlank() || telefono.isBlank() || capacidad.isBlank()) {
-            _uiState.update { it.copy(error = "Campos obligatorios vacíos") }
-            return
-        }
-        _uiState.update { it.copy(isLoading = true, error = null) }
-        viewModelScope.launch {
-            try {
-                val home = Home(id, nombre.trim(), direccion.trim(), capacidad.toIntOrNull() ?: 0, 0, tipo)
-                if (id == 0) repository.createHome(home, telefono) else repository.updateHome(home, telefono)
-                _uiState.update { it.copy(isLoading = false, isSuccess = true) }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message) }
-            }
-        }
+    fun loadInitialHomeData(n: String, d: String, c: String, t: String) {
+        _homeNombre.value = n; _homeDireccion.value = d; _homeCapacidad.value = c; _homeTipo.value = t
     }
 
-    fun deleteHome(id: Int) {
+    fun savePet(id: Int = 0) {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             try {
-                repository.deleteHome(id)
+                val pet = Pet(id, _petNombre.value, _petEspecie.value, _petEdad.value.toIntOrNull() ?: 0, "Saludable", "Sin hogar", null)
+                if (id == 0) repository.createPet(pet) else repository.updatePet(pet)
                 _uiState.update { it.copy(isLoading = false, isSuccess = true) }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "Error al eliminar hogar") }
-            }
+            } catch (e: Exception) { _uiState.update { it.copy(isLoading = false, error = e.message) } }
         }
     }
 
-    fun assignPetToHome(petId: Int, homeId: Int, currentOccupancy: Int) {
-        _uiState.update { it.copy(isLoading = true, error = null) }
+    fun saveHome(id: Int = 0) {
+        _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            val result = assignPetUseCase(petId, homeId, currentOccupancy)
-            result.fold(
+            try {
+                val home = Home(id, _homeNombre.value, _homeDireccion.value, _homeCapacidad.value.toIntOrNull() ?: 0, 0, _homeTipo.value)
+                if (id == 0) repository.createHome(home, _homeTelefono.value) else repository.updateHome(home, _homeTelefono.value)
+                _uiState.update { it.copy(isLoading = false, isSuccess = true) }
+            } catch (e: Exception) { _uiState.update { it.copy(isLoading = false, error = e.message) } }
+        }
+    }
+
+    fun deletePet(id: Int) = viewModelScope.launch { repository.deletePet(id) }
+    fun deleteHome(id: Int) = viewModelScope.launch { repository.deleteHome(id) }
+
+    fun assignPetToHome(petId: Int, homeId: Int, occ: Int) {
+        _uiState.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            assignPetUseCase(petId, homeId, occ).fold(
                 onSuccess = { _uiState.update { it.copy(isLoading = false, isSuccess = true) } },
-                onFailure = { error -> _uiState.update { it.copy(isLoading = false, error = error.message) } }
+                onFailure = { _uiState.update { it.copy(isLoading = false, error = it.message) } }
             )
         }
     }
 
-    fun resetState() {
-        _uiState.update { FormUiState() }
-        _petNombre.value = ""
-        _petEspecie.value = "Perro"
-        _petEdad.value = ""
-
-        _homeNombre.value = ""
-        _homeDireccion.value = ""
-        _homeTelefono.value = ""
-        _homeCapacidad.value = ""
-        _homeTipo.value = "Perros"
-    }
+    fun resetState() { _uiState.update { FormUiState() } }
 }
