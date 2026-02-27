@@ -1,25 +1,37 @@
 package com.example.petmatch.core.navigation
 
-sealed class PetMatchScreens(val route: String) {
-    object Login : PetMatchScreens("login")
-    object Register : PetMatchScreens("register")
-    object Dashboard : PetMatchScreens("dashboard")
-    object AddPet : PetMatchScreens("add_pet")
-    object AddHome : PetMatchScreens("add_home")
+import kotlinx.serialization.Serializable
 
-    // Ruta para asignación
-    object AssignPet : PetMatchScreens("assign_pet/{petId}/{petName}") {
-        fun createRoute(id: Int, name: String) = "assign_pet/$id/$name"
-    }
+// Definimos las rutas como objetos o clases serializables
+@Serializable
+sealed class PetMatchScreens {
+    @Serializable object Login
+    @Serializable object Register
+    @Serializable object Dashboard
+    @Serializable object AddPet
+    @Serializable object AddHome
 
-    // RUTAS DE EDICIÓN
-    object EditPet : PetMatchScreens("edit_pet/{id}/{name}/{specie}/{age}") {
-        fun createRoute(id: Int, name: String, specie: String, age: Int) =
-            "edit_pet/$id/$name/$specie/$age"
-    }
+    // Las rutas con parámetros ahora son data classes
+    @Serializable
+    data class EditPet(
+        val id: Int,
+        val name: String,
+        val specie: String,
+        val age: Int
+    )
 
-    object EditHome : PetMatchScreens("edit_home/{id}/{name}/{dir}/{cap}/{type}") {
-        fun createRoute(id: Int, name: String, dir: String, cap: Int, type: String) =
-            "edit_home/$id/$name/$dir/$cap/$type"
-    }
+    @Serializable
+    data class EditHome(
+        val id: Int,
+        val name: String,
+        val dir: String,
+        val cap: Int,
+        val type: String
+    )
+
+    @Serializable
+    data class AssignPet(
+        val petId: Int,
+        val petName: String
+    )
 }

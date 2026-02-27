@@ -80,6 +80,9 @@ dependencies {
     implementation(libs.io.coil.kt.coil.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.kotlinx.serialization.json)
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
 
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)

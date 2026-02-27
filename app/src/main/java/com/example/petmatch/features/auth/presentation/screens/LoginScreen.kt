@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.petmatch.features.auth.presentation.viewmodels.AuthViewModel
 
 @Composable
@@ -18,9 +19,10 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
-    val state by viewModel.uiState.collectAsState()
-    val email by viewModel.emailLogin.collectAsState()
-    val pass by viewModel.passwordLogin.collectAsState()
+    // OPTIMIZACIÓN: collectAsStateWithLifecycle
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val email by viewModel.emailLogin.collectAsStateWithLifecycle()
+    val pass by viewModel.passwordLogin.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     if (state.isSuccess) {
@@ -38,7 +40,11 @@ fun LoginScreen(
         Arrangement.Center,
         Alignment.CenterHorizontally
     ) {
-        Text("PetMatch", style = MaterialTheme.typography.displayLarge, color = MaterialTheme.colorScheme.primary)
+        Text(
+            text = "PetMatch",
+            style = MaterialTheme.typography.displayLarge,
+            color = MaterialTheme.colorScheme.primary
+        )
         Spacer(Modifier.height(32.dp))
         OutlinedTextField(
             value = email,
@@ -59,7 +65,7 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
             enabled = !state.isLoading
         ) {
-            if (state.isLoading) CircularProgressIndicator(Modifier.size(24.dp))
+            if (state.isLoading) CircularProgressIndicator(Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
             else Text("Iniciar Sesión")
         }
         TextButton(onClick = onNavigateToRegister) {

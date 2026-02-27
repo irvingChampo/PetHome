@@ -8,7 +8,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.petmatch.features.petmatch.domain.entities.Pet
@@ -16,7 +15,7 @@ import com.example.petmatch.features.petmatch.domain.entities.Pet
 @Composable
 fun PetCard(
     pet: Pet,
-    isAdmin: Boolean, // Nuevo parámetro para control de rol
+    isAdmin: Boolean,
     onEdit: (Pet) -> Unit,
     onDelete: (Int) -> Unit,
     onAssignClick: (Int, String) -> Unit
@@ -29,17 +28,17 @@ fun PetCard(
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(pet.nombre, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Text("${pet.especie} • ${pet.edad} años")
+                    Text("${pet.especie} • ${pet.edad} años", style = MaterialTheme.typography.bodyMedium)
                 }
 
-                // SOLO EL ADMIN PUEDE EDITAR O ELIMINAR MASCOTAS
                 if (isAdmin) {
                     Row {
                         IconButton(onClick = { onEdit(pet) }) {
                             Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary)
                         }
                         IconButton(onClick = { onDelete(pet.id) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color(0xFFE63946))
+                            // Uso de categoría ERROR del tema
+                            Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
                         }
                     }
                 }
@@ -47,14 +46,19 @@ fun PetCard(
 
             Spacer(Modifier.height(8.dp))
 
+            // Badge de estado usando colores del tema
             Surface(
-                color = if (pet.estado == "Sin hogar") Color(0xFFE63946) else Color(0xFF2D6A4F),
+                color = if (pet.estado == "Sin hogar") MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
                 shape = MaterialTheme.shapes.small
             ) {
-                Text(pet.estado, Modifier.padding(horizontal = 8.dp, vertical = 4.dp), Color.White)
+                Text(
+                    text = pet.estado,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    color = if (pet.estado == "Sin hogar") MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer,
+                    style = MaterialTheme.typography.labelMedium
+                )
             }
 
-            // SOLO EL ADMIN PUEDE ASIGNAR UN HOGAR
             if (isAdmin && pet.estado == "Sin hogar") {
                 Button(
                     onClick = { onAssignClick(pet.id, pet.nombre) },

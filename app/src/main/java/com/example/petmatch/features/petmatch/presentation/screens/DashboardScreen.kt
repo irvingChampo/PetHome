@@ -10,10 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.petmatch.features.petmatch.presentation.components.HomeCard
 import com.example.petmatch.features.petmatch.presentation.components.PetCard
 import com.example.petmatch.features.petmatch.presentation.viewmodels.DashboardViewModel
@@ -30,7 +30,8 @@ fun DashboardScreen(
     onNavigateToEditHome: (Int, String, String, Int, String) -> Unit,
     onNavigateToAssign: (Int, String) -> Unit
 ) {
-    val state by viewModel.uiState.collectAsState()
+    // OPTIMIZACIÓN: collectAsStateWithLifecycle ahorra batería en segundo plano
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     val isAdmin = viewModel.isAdmin
     val isVoluntario = viewModel.isVoluntario
     val context = LocalContext.current
@@ -51,14 +52,16 @@ fun DashboardScreen(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Confirmar Eliminación") },
-            text = { Text("¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.") },
+            text = { Text("¿Estás seguro de que deseas eliminar este registro?") },
             confirmButton = {
                 TextButton(onClick = {
                     if (selectedTab == 0) formViewModel.deletePet(itemToDeleteId)
                     else formViewModel.deleteHome(itemToDeleteId)
                     showDeleteDialog = false
                     viewModel.loadData()
-                }) { Text("Eliminar", color = Color.Red) }
+                }) {
+                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                }
             },
             dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") } }
         )
@@ -67,8 +70,11 @@ fun DashboardScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("PetMatch - ${if (isAdmin) "Administrador" else "Voluntario"}", color = Color.White) },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
+                title = { Text("PetMatch - ${if (isAdmin) "Administrador" else "Voluntario"}") },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
         },
         floatingActionButton = {
@@ -76,9 +82,10 @@ fun DashboardScreen(
             if (showFab) {
                 FloatingActionButton(
                     onClick = { if (selectedTab == 0) onNavigateToAddPet() else onNavigateToAddHome() },
-                    containerColor = MaterialTheme.colorScheme.secondary
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Agregar", tint = Color.White)
+                    Icon(Icons.Default.Add, contentDescription = "Agregar")
                 }
             }
         }
