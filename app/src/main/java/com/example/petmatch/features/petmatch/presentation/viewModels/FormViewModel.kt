@@ -6,7 +6,6 @@ import com.example.petmatch.core.session.UserSession
 import com.example.petmatch.features.petmatch.domain.entities.Home
 import com.example.petmatch.features.petmatch.domain.entities.Pet
 import com.example.petmatch.features.petmatch.domain.repositories.PetMatchRepository
-import com.example.petmatch.features.petmatch.domain.usescases.AssignPetUseCase
 import com.example.petmatch.features.petmatch.presentation.screens.FormUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -16,7 +15,6 @@ import javax.inject.Inject
 @HiltViewModel
 class FormViewModel @Inject constructor(
     private val repository: PetMatchRepository,
-    private val assignPetUseCase: AssignPetUseCase,
     private val userSession: UserSession
 ) : ViewModel() {
 
@@ -103,21 +101,6 @@ class FormViewModel @Inject constructor(
 
     fun deleteHome(id: Int) = viewModelScope.launch {
         if (userSession.isVoluntario()) repository.deleteHome(id)
-    }
-
-    fun assignPetToHome(petId: Int, homeId: Int, currentOccupancy: Int) {
-        if (!userSession.isAdmin()) return
-        _uiState.update { it.copy(isLoading = true) }
-        viewModelScope.launch {
-            val result = assignPetUseCase(petId, homeId, currentOccupancy)
-            result.fold(
-                onSuccess = { _uiState.update { it.copy(isLoading = false, isSuccess = true) } },
-                onFailure = { exception ->
-                    _uiState.update { it.copy(isLoading = false) }
-                    _errorFlow.emit(exception.message ?: "Error al asignar")
-                }
-            )
-        }
     }
 
     fun resetState() { _uiState.update { FormUiState() } }
