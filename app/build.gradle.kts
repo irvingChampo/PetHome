@@ -85,6 +85,11 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
 
+    // SOCKET.IO
+    implementation(libs.socket.io.client)
+    // Necesitaremos Gson para convertir lo que llegue por el socket a objetos
+    implementation(libs.com.squareup.retrofit2.converter.json)
+
     // ROOM
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
