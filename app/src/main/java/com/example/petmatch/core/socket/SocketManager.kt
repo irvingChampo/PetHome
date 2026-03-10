@@ -2,10 +2,14 @@ package com.example.petmatch.core.socket
 
 import android.util.Log
 import com.example.petmatch.features.petmatch.data.datasources.local.dao.PetMatchDao
+import com.example.petmatch.features.health.data.datasources.local.dao.HealthDao // Nuevo import
 import com.example.petmatch.features.petmatch.data.datasources.remote.model.HogarDto
 import com.example.petmatch.features.petmatch.data.datasources.remote.model.MascotaDto
+import com.example.petmatch.features.health.data.datasources.remote.model.HealthDto // Nuevo import
 import com.example.petmatch.features.petmatch.data.datasources.local.entities.toEntity
+import com.example.petmatch.features.health.data.datasources.local.entities.toEntity // Nuevo import
 import com.example.petmatch.features.petmatch.data.datasources.remote.mapper.toDomain
+import com.example.petmatch.features.health.data.datasources.remote.mapper.toDomain // Nuevo import
 import com.google.gson.Gson
 import io.socket.client.IO
 import io.socket.client.Socket
@@ -19,7 +23,8 @@ import javax.inject.Singleton
 
 @Singleton
 class PetMatchSocketManager @Inject constructor(
-    private val petMatchDao: PetMatchDao
+    private val petMatchDao: PetMatchDao,
+    private val healthDao: HealthDao // Inyectado
 ) {
     private var mSocket: Socket? = null
     private val gson = Gson()
@@ -31,71 +36,57 @@ class PetMatchSocketManager @Inject constructor(
             opts.forceNew = true
             opts.reconnection = true
 
+            // URL del servidor (asegúrate que coincida con tu backend)
             mSocket = IO.socket("https://backend-petmatch-api.onrender.com", opts)
 
-            // Eventos de conexión
-            mSocket?.on(Socket.EVENT_CONNECT) {
-                Log.d("SocketManager", "Conectado al servidor de PetMatch")
-            }
+            mSocket?.on(Socket.EVENT_CONNECT) { Log.d("SocketManager", "Conectado") }
+            mSocket?.on(Socket.EVENT_DISCONNECT) { Log.d("SocketManager", "Desconectado") }
 
-            mSocket?.on(Socket.EVENT_DISCONNECT) {
-                Log.d("SocketManager", " Desconectado del servidor")
-            }
-
-            // --- ESCUCHA DE EVENTOS EN TIEMPO REAL ---
-
-            // 1. Cuando se crea o actualiza una mascota
+            // --- EVENTOS DE MASCOTAS Y HOGARES (Existentes) ---
             mSocket?.on("mascota_actualizada") { args ->
                 val data = args[0] as JSONObject
                 scope.launch {
-                    try {
-                        val dto = gson.fromJson(data.toString(), MascotaDto::class.java)
-                        petMatchDao.insertPet(dto.toDomain().toEntity())
-                        Log.d("SocketManager", " Mascota actualizada vía Socket: ${dto.nombre}")
-                    } catch (e: Exception) {
-                        Log.e("SocketManager", "Error procesando mascota_actualizada", e)
-                    }
+                    val dto = gson.fromJson(data.toString(), MascotaDto::class.java)
+                    petMatchDao.insertPet(dto.toDomain().toEntity())
                 }
             }
 
-            // 2. Cuando se elimina una mascota
             mSocket?.on("mascota_eliminada") { args ->
                 val data = args[0] as JSONObject
-                val id = data.getInt("id")
-                scope.launch {
-                    petMatchDao.deletePet(id)
-                    Log.d("SocketManager", " Mascota eliminada vía Socket ID: $id")
-                }
+                scope.launch { petMatchDao.deletePet(data.getInt("id")) }
             }
 
-            // 3. Cuando se crea o actualiza un hogar
             mSocket?.on("hogar_actualizado") { args ->
                 val data = args[0] as JSONObject
                 scope.launch {
-                    try {
-                        val dto = gson.fromJson(data.toString(), HogarDto::class.java)
-                        petMatchDao.insertHome(dto.toDomain().toEntity())
-                        Log.d("SocketManager", " Hogar actualizado vía Socket: ${dto.nombreVoluntario}")
-                    } catch (e: Exception) {
-                        Log.e("SocketManager", "Error procesando hogar_actualizado", e)
-                    }
+                    val dto = gson.fromJson(data.toString(), HogarDto::class.java)
+                    petMatchDao.insertHome(dto.toDomain().toEntity())
                 }
             }
 
-            // 4. Cuando se elimina un hogar
             mSocket?.on("hogar_eliminado") { args ->
                 val data = args[0] as JSONObject
-                val id = data.getInt("id")
+                scope.launch { petMatchDao.deleteHome(data.getInt("id")) }
+            }
+
+            // --- NUEVO: EVENTO DE SALUD (FEATURE F03) ---
+            mSocket?.on("nuevo_registro_salud") { args ->
+                val data = args[0] as JSONObject
                 scope.launch {
-                    petMatchDao.deleteHome(id)
-                    Log.d("SocketManager", " Hogar eliminado vía Socket ID: $id")
+                    try {
+                        val dto = gson.fromJson(data.toString(), HealthDto::class.java)
+                        // Insertamos en Room de la feature health
+                        healthDao.insertHealthRecord(dto.toDomain().toEntity())
+                        Log.d("SocketManager", "Nuevo registro de salud recibido vía Socket para mascota: ${dto.mascotaId}")
+                    } catch (e: Exception) {
+                        Log.e("SocketManager", "Error procesando nuevo_registro_salud", e)
+                    }
                 }
             }
 
             mSocket?.connect()
-
         } catch (e: Exception) {
-            Log.e("SocketManager", "Error al configurar Socket.io", e)
+            Log.e("SocketManager", "Error Socket.io", e)
         }
     }
 
