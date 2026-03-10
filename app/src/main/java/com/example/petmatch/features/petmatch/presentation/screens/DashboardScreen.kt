@@ -1,6 +1,8 @@
 package com.example.petmatch.features.petmatch.presentation.screens
 
+import android.content.Context
 import android.widget.Toast
+import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.petmatch.features.petmatch.presentation.components.HomeCard
@@ -26,14 +30,13 @@ fun DashboardScreen(
     formViewModel: FormViewModel = hiltViewModel(),
     onNavigateToAddPet: () -> Unit,
     onNavigateToAddHome: () -> Unit,
-    onNavigateToEditPet: (Int, String, String, Int) -> Unit,
+    onNavigateToEditPet: (Int, String, String, Int, String?) -> Unit,
     onNavigateToEditHome: (Int, String, String, Int, String) -> Unit,
     onNavigateToAssign: (Int, String) -> Unit,
     onNavigateToHealth: (Int, String) -> Unit,      // Feature F03
     onToggleInterest: (Int, Boolean) -> Unit,       // Feature F02
     onNavigateToInterests: (Int, String) -> Unit     // Feature F02
 ) {
-    // OPTIMIZACIÓN: collectAsStateWithLifecycle ahorra batería en segundo plano
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val isAdmin = viewModel.isAdmin
     val isVoluntario = viewModel.isVoluntario
@@ -45,8 +48,16 @@ fun DashboardScreen(
 
     LaunchedEffect(Unit) { viewModel.loadData() }
 
+    // Escucha errores generales del Dashboard
     LaunchedEffect(Unit) {
         viewModel.errorFlow.collect { errorMessage ->
+            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // NUEVO: Escucha errores específicos al eliminar (del FormViewModel)
+    LaunchedEffect(Unit) {
+        formViewModel.errorFlow.collect { errorMessage ->
             Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
         }
     }
@@ -55,13 +66,23 @@ fun DashboardScreen(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Confirmar Eliminación") },
-            text = { Text("¿Estás seguro de que deseas eliminar este registro?") },
+            text = { Text("¿Estás seguro de que deseas eliminar este registro? Se requerirá autenticación.") },
             confirmButton = {
                 TextButton(onClick = {
-                    if (selectedTab == 0) formViewModel.deletePet(itemToDeleteId)
-                    else formViewModel.deleteHome(itemToDeleteId)
                     showDeleteDialog = false
-                    viewModel.loadData()
+
+                    showBiometricPrompt(context) {
+                        // ACTUALIZADO: Ahora la recarga de datos ESPERA a que se elimine correctamente
+                        if (selectedTab == 0) {
+                            formViewModel.deletePet(itemToDeleteId) {
+                                viewModel.loadData() // Esto se ejecuta SOLO tras borrar con éxito
+                            }
+                        } else {
+                            formViewModel.deleteHome(itemToDeleteId) {
+                                viewModel.loadData()
+                            }
+                        }
+                    }
                 }) {
                     Text("Eliminar", color = MaterialTheme.colorScheme.error)
                 }
@@ -108,7 +129,7 @@ fun DashboardScreen(
                             PetCard(
                                 pet = pet,
                                 isAdmin = isAdmin,
-                                onEdit = { onNavigateToEditPet(it.id, it.nombre, it.especie, it.edad) },
+                                onEdit = { onNavigateToEditPet(it.id, it.nombre, it.especie, it.edad, it.fotoUrl) },
                                 onDelete = { itemToDeleteId = it; showDeleteDialog = true },
                                 onAssignClick = onNavigateToAssign,
                                 onHealthClick = onNavigateToHealth, // Conectado a F03
@@ -130,4 +151,45 @@ fun DashboardScreen(
             }
         }
     }
+}
+
+private fun showBiometricPrompt(
+    context: Context,
+    onSuccess: () -> Unit
+) {
+    val fragmentActivity = context as? FragmentActivity
+    if (fragmentActivity == null) {
+        Toast.makeText(context, "Error: Dispositivo no compatible con biometría", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    val executor = ContextCompat.getMainExecutor(context)
+    val biometricPrompt = BiometricPrompt(
+        fragmentActivity,
+        executor,
+        object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                super.onAuthenticationError(errorCode, errString)
+                Toast.makeText(context, "Operación cancelada: $errString", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                super.onAuthenticationSucceeded(result)
+                onSuccess()
+            }
+
+            override fun onAuthenticationFailed() {
+                super.onAuthenticationFailed()
+                Toast.makeText(context, "Autenticación fallida. Intenta de nuevo.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
+
+    val promptInfo = BiometricPrompt.PromptInfo.Builder()
+        .setTitle("Autorización Requerida")
+        .setSubtitle("Usa tu huella dactilar para eliminar el registro de forma segura")
+        .setNegativeButtonText("Cancelar")
+        .build()
+
+    biometricPrompt.authenticate(promptInfo)
 }

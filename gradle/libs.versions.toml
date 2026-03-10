@@ -18,6 +18,8 @@ secretsGradle = "2.0.1"
 hiltNavigationCompose = "1.2.0"
 room = "2.6.1"
 socketIo = "2.1.0"
+# NUEVA VERSIÓN BIOMÉTRICA
+biometric = "1.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -46,8 +48,8 @@ androidx-room-compiler = { group = "androidx.room", name = "room-compiler", vers
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 socket-io-client = { group = "io.socket", name = "socket.io-client", version.ref = "socketIo" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.7.3" }
-
-
+# NUEVA LIBRERÍA BIOMÉTRICA
+androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

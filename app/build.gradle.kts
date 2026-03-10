@@ -11,16 +11,16 @@ plugins {
 }
 
 
-        android {
-            namespace = "com.example.petmatch"
-            compileSdk = 35
+android {
+    namespace = "com.example.petmatch"
+    compileSdk = 35
 
-            defaultConfig {
-                applicationId = "com.example.petmatch"
-                minSdk = 26
-                targetSdk = 35
-                versionCode = 1
-                versionName = "1.0"
+    defaultConfig {
+        applicationId = "com.example.petmatch"
+        minSdk = 26
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -98,6 +98,9 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+
+    // NUEVO: BIOMETRÍA
+    implementation(libs.androidx.biometric)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

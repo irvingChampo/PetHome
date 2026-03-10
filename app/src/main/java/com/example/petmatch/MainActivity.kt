@@ -1,9 +1,9 @@
 package com.example.petmatch
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.fragment.app.FragmentActivity // NUEVO IMPORT PARA BIOMETRÍA
 import com.example.petmatch.core.navigation.AppNavigation
 import com.example.petmatch.core.socket.PetMatchSocketManager // Añadir import
 import com.example.petmatch.ui.theme.PetMatchTheme
@@ -11,7 +11,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject // Añadir import
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+// ACTUALIZADO: Cambiamos ComponentActivity por FragmentActivity
+class MainActivity : FragmentActivity() {
 
     @Inject
     lateinit var socketManager: PetMatchSocketManager // Inyectar manager
