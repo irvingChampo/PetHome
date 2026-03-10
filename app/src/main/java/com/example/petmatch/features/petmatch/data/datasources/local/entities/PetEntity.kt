@@ -12,8 +12,10 @@ data class PetEntity(
     val edad: Int,
     val estadoSalud: String,
     val estado: String,
-    val fotoUrl: String?
+    val fotoUrl: String?,
+    val isInterested: Boolean = false // NUEVO: Estado del corazón para el usuario actual
 )
 
-fun PetEntity.toDomain() = Pet(id, nombre, especie, edad, estadoSalud, estado, fotoUrl)
-fun Pet.toEntity() = PetEntity(id, nombre, especie, edad, estadoSalud, estado, fotoUrl)
+// Actualizamos los Mappers
+fun PetEntity.toDomain() = Pet(id, nombre, especie, edad, estadoSalud, estado, fotoUrl, isInterested)
+fun Pet.toEntity() = PetEntity(id, nombre, especie, edad, estadoSalud, estado, fotoUrl, isInterested)
