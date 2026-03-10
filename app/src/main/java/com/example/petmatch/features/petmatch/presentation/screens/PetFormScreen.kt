@@ -24,6 +24,7 @@ import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.petmatch.features.petmatch.presentation.viewmodels.FormViewModel
+import com.example.petmatch.core.utils.triggerErrorVibration // NUEVO IMPORT
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,6 +69,8 @@ fun PetFormScreen(
 
     LaunchedEffect(Unit) {
         viewModel.errorFlow.collect { errorMessage ->
+            // NUEVO: Hacemos vibrar el teléfono antes de mostrar el mensaje de error del formulario
+            triggerErrorVibration(context)
             Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
         }
     }

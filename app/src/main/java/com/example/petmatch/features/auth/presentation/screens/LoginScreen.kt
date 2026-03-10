@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.petmatch.features.auth.presentation.viewmodels.AuthViewModel
+import com.example.petmatch.core.utils.triggerErrorVibration
 
 @Composable
 fun LoginScreen(
@@ -31,6 +32,8 @@ fun LoginScreen(
 
     LaunchedEffect(Unit) {
         viewModel.errorFlow.collect { errorMessage ->
+            // NUEVO: Hacemos vibrar el teléfono antes de mostrar el mensaje
+            triggerErrorVibration(context)
             Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
         }
     }
