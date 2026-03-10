@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.example.petmatch.core.database.PetMatchDatabase
 import com.example.petmatch.features.petmatch.data.datasources.local.dao.PetMatchDao
 import com.example.petmatch.features.health.data.datasources.local.dao.HealthDao // Import nuevo
+import com.example.petmatch.features.interest.data.datasources.local.dao.InterestDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -39,5 +40,11 @@ object DatabaseModule {
     @Singleton
     fun provideHealthDao(database: PetMatchDatabase): HealthDao {
         return database.healthDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideInterestDao(database: PetMatchDatabase): InterestDao {
+        return database.interestDao()
     }
 }
