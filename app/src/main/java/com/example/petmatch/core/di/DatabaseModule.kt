@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.petmatch.core.database.PetMatchDatabase
 import com.example.petmatch.features.petmatch.data.datasources.local.dao.PetMatchDao
+import com.example.petmatch.features.health.data.datasources.local.dao.HealthDao // Import nuevo
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,12 +23,21 @@ object DatabaseModule {
             context,
             PetMatchDatabase::class.java,
             "petmatch_database"
-        ).build()
+        )
+            .fallbackToDestructiveMigration() // Ayuda a limpiar la BD si cambias versiones sin migración manual
+            .build()
     }
 
     @Provides
     @Singleton
     fun providePetMatchDao(database: PetMatchDatabase): PetMatchDao {
         return database.petMatchDao()
+    }
+
+    // NUEVO: Proveer el DAO de salud para la inyección de dependencias
+    @Provides
+    @Singleton
+    fun provideHealthDao(database: PetMatchDatabase): HealthDao {
+        return database.healthDao()
     }
 }

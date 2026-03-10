@@ -10,16 +10,17 @@ plugins {
     alias(libs.plugins.secrets.gradle)
 }
 
-android {
-    namespace = "com.example.petmatch"
-    compileSdk = 35
 
-    defaultConfig {
-        applicationId = "com.example.petmatch"
-        minSdk = 26
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        android {
+            namespace = "com.example.petmatch"
+            compileSdk = 35
+
+            defaultConfig {
+                applicationId = "com.example.petmatch"
+                minSdk = 26
+                targetSdk = 35
+                versionCode = 1
+                versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
