@@ -2,6 +2,7 @@ package com.example.petmatch.features.petmatch.presentation.screens
 
 import android.content.Context
 import android.widget.Toast
+import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -55,7 +56,7 @@ fun DashboardScreen(
         }
     }
 
-    // NUEVO: Escucha errores específicos al eliminar (del FormViewModel)
+    // Escucha errores específicos al eliminar (del FormViewModel)
     LaunchedEffect(Unit) {
         formViewModel.errorFlow.collect { errorMessage ->
             Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
@@ -72,10 +73,9 @@ fun DashboardScreen(
                     showDeleteDialog = false
 
                     showBiometricPrompt(context) {
-                        // ACTUALIZADO: Ahora la recarga de datos ESPERA a que se elimine correctamente
                         if (selectedTab == 0) {
                             formViewModel.deletePet(itemToDeleteId) {
-                                viewModel.loadData() // Esto se ejecuta SOLO tras borrar con éxito
+                                viewModel.loadData()
                             }
                         } else {
                             formViewModel.deleteHome(itemToDeleteId) {
@@ -153,6 +153,7 @@ fun DashboardScreen(
     }
 }
 
+// FUNCIÓN AUXILIAR PARA LA BIOMETRÍA ACTUALIZADA CON RESPALDO (PIN/PATRÓN)
 private fun showBiometricPrompt(
     context: Context,
     onSuccess: () -> Unit
@@ -170,7 +171,10 @@ private fun showBiometricPrompt(
         object : BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                 super.onAuthenticationError(errorCode, errString)
-                Toast.makeText(context, "Operación cancelada: $errString", Toast.LENGTH_SHORT).show()
+                // Ignoramos el error si el usuario simplemente canceló el diálogo
+                if (errorCode != BiometricPrompt.ERROR_USER_CANCELED && errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                    Toast.makeText(context, "Operación cancelada: $errString", Toast.LENGTH_SHORT).show()
+                }
             }
 
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
@@ -185,10 +189,14 @@ private fun showBiometricPrompt(
         }
     )
 
+    // ACTUALIZADO: Añadimos soporte para PIN/Patrón si no hay huella
     val promptInfo = BiometricPrompt.PromptInfo.Builder()
         .setTitle("Autorización Requerida")
-        .setSubtitle("Usa tu huella dactilar para eliminar el registro de forma segura")
-        .setNegativeButtonText("Cancelar")
+        .setSubtitle("Usa tu huella, rostro o el PIN de tu dispositivo para continuar")
+        .setAllowedAuthenticators(
+            BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                    BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        )
         .build()
 
     biometricPrompt.authenticate(promptInfo)
