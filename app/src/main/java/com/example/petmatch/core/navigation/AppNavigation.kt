@@ -10,9 +10,9 @@ import androidx.navigation.toRoute
 import com.example.petmatch.features.auth.presentation.screens.*
 import com.example.petmatch.features.petmatch.presentation.screens.*
 import com.example.petmatch.features.health.presentation.screens.PetHealthScreen
-import com.example.petmatch.features.interest.presentation.screens.PetInterestsScreen // Import nuevo
+import com.example.petmatch.features.interest.presentation.screens.PetInterestsScreen
 import com.example.petmatch.features.petmatch.presentation.viewmodels.DashboardViewModel
-import com.example.petmatch.features.interest.presentation.viewmodels.InterestViewModel // Import nuevo
+import com.example.petmatch.features.interest.presentation.viewmodels.InterestViewModel
 
 @Composable
 fun AppNavigation() {
@@ -42,16 +42,16 @@ fun AppNavigation() {
         }
 
         composable<PetMatchScreens.Dashboard> { backStackEntry ->
-            val interestViewModel: InterestViewModel = hiltViewModel() // Para el corazón
+            val interestViewModel: InterestViewModel = hiltViewModel()
 
             DashboardScreen(
                 onNavigateToAddPet = { navController.navigate(PetMatchScreens.AddPet) },
                 onNavigateToAddHome = { navController.navigate(PetMatchScreens.AddHome) },
-                onNavigateToEditPet = { id, n, s, a -> navController.navigate(PetMatchScreens.EditPet(id, n, s, a)) },
+                // ACTUALIZADO: Ahora recibe 5 parámetros, incluyendo la URL de la foto (fUrl)
+                onNavigateToEditPet = { id, n, s, a, fUrl -> navController.navigate(PetMatchScreens.EditPet(id, n, s, a, fUrl)) },
                 onNavigateToEditHome = { id, n, d, c, t -> navController.navigate(PetMatchScreens.EditHome(id, n, d, c, t)) },
                 onNavigateToAssign = { id, name -> navController.navigate(PetMatchScreens.AssignPet(id, name)) },
                 onNavigateToHealth = { id, name -> navController.navigate(PetMatchScreens.HealthHistory(id, name)) },
-                // NUEVAS ACCIONES F02
                 onToggleInterest = { petId, status -> interestViewModel.toggleInterest(petId, status) },
                 onNavigateToInterests = { id, name -> navController.navigate(PetMatchScreens.PetInterests(id, name)) }
             )
@@ -61,7 +61,14 @@ fun AppNavigation() {
 
         composable<PetMatchScreens.EditPet> { backStackEntry ->
             val args = backStackEntry.toRoute<PetMatchScreens.EditPet>()
-            PetFormScreen(petId = args.id, initialName = args.name, initialSpecie = args.specie, initialAge = args.age.toString(), onBack = { navController.popBackStack() })
+            PetFormScreen(
+                petId = args.id,
+                initialName = args.name,
+                initialSpecie = args.specie,
+                initialAge = args.age.toString(),
+                initialFotoUrl = args.fotoUrl, // ACTUALIZADO: Le pasamos la foto al formulario
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable<PetMatchScreens.AddHome> { HomeFormScreen(onBack = { navController.popBackStack() }) }
@@ -83,7 +90,6 @@ fun AppNavigation() {
             PetHealthScreen(petId = args.petId, petName = args.petName, onBack = { navController.popBackStack() })
         }
 
-        // NUEVA RUTA: Interesados
         composable<PetMatchScreens.PetInterests> { backStackEntry ->
             val args = backStackEntry.toRoute<PetMatchScreens.PetInterests>()
             PetInterestsScreen(petId = args.petId, petName = args.petName, onBack = { navController.popBackStack() })

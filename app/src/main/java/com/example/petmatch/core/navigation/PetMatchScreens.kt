@@ -11,7 +11,8 @@ sealed class PetMatchScreens {
     @Serializable object AddHome
 
     @Serializable
-    data class EditPet(val id: Int, val name: String, val specie: String, val age: Int)
+    // ACTUALIZADO: Agregamos fotoUrl a la ruta
+    data class EditPet(val id: Int, val name: String, val specie: String, val age: Int, val fotoUrl: String? = null)
 
     @Serializable
     data class EditHome(val id: Int, val name: String, val dir: String, val cap: Int, val type: String)

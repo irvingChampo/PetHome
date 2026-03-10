@@ -31,14 +31,31 @@ class PetMatchRepositoryImpl @Inject constructor(
     }
 
     override suspend fun createPet(pet: Pet): Pet {
-        val dto = MascotaDto(nombre = pet.nombre, especie = pet.especie, edad = pet.edad, estadoSalud = pet.estadoSalud, estado = pet.estado)
+        // CORREGIDO: Añadimos fotoUrl al DTO que se envía a la API
+        val dto = MascotaDto(
+            nombre = pet.nombre,
+            especie = pet.especie,
+            edad = pet.edad,
+            estadoSalud = pet.estadoSalud,
+            estado = pet.estado,
+            fotoUrl = pet.fotoUrl
+        )
         val createdPet = api.crearMascota(dto).toDomain()
         dao.insertPet(createdPet.toEntity())
         return createdPet
     }
 
     override suspend fun updatePet(pet: Pet): Pet {
-        val dto = MascotaDto(id = pet.id, nombre = pet.nombre, especie = pet.especie, edad = pet.edad, estadoSalud = pet.estadoSalud, estado = pet.estado)
+        // CORREGIDO: Añadimos fotoUrl al DTO que se envía a la API
+        val dto = MascotaDto(
+            id = pet.id,
+            nombre = pet.nombre,
+            especie = pet.especie,
+            edad = pet.edad,
+            estadoSalud = pet.estadoSalud,
+            estado = pet.estado,
+            fotoUrl = pet.fotoUrl
+        )
         val updatedPet = api.actualizarMascota(pet.id, dto).toDomain()
         dao.insertPet(updatedPet.toEntity())
         return updatedPet
@@ -69,17 +86,14 @@ class PetMatchRepositoryImpl @Inject constructor(
     }
 
     override suspend fun assignPetToHome(petId: Int, homeId: Int, currentOccupancy: Int): Boolean {
-        // Actualizamos la BD local de inmediato
         dao.updatePetState(petId, "En acogida")
         dao.updateHomeOccupancy(homeId, currentOccupancy + 1)
 
         return try {
-            // Intento de actualizar en el servidor API
             api.patchMascota(petId, mapOf("estado" to "En acogida", "hogarId" to homeId.toString()))
             api.patchHogar(homeId, mapOf("ocupacionActual" to currentOccupancy + 1))
             true
         } catch (e: Exception) {
-            // 3. ROLLBACK Si el servidor falla, revertimos los cambios locales
             dao.updatePetState(petId, "Sin hogar")
             dao.updateHomeOccupancy(homeId, currentOccupancy)
             throw Exception("El servidor falló. Cambios revertidos en pantalla.")

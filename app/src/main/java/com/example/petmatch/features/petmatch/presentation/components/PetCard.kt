@@ -1,15 +1,20 @@
 package com.example.petmatch.features.petmatch.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.petmatch.features.petmatch.domain.entities.Pet
 
 @Composable
@@ -29,6 +34,44 @@ fun PetCard(
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+
+                // --- NUEVA SECCIÓN DE IMAGEN ---
+                if (!pet.fotoUrl.isNullOrEmpty()) {
+                    // Verificamos si es una URL de internet o una ruta local
+                    val imageModel = if (pet.fotoUrl.startsWith("http")) {
+                        pet.fotoUrl // Es de internet
+                    } else {
+                        java.io.File(pet.fotoUrl) // Es de la cámara
+                    }
+
+                    AsyncImage(
+                        model = imageModel,
+                        contentDescription = "Foto de ${pet.nombre}",
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    // Placeholder si no tiene foto
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surface),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Pets,
+                            contentDescription = "Sin foto",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+                // --- FIN SECCIÓN IMAGEN ---
+
                 Column(Modifier.weight(1f)) {
                     Text(pet.nombre, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Text("${pet.especie} • ${pet.edad} años", style = MaterialTheme.typography.bodyMedium)
