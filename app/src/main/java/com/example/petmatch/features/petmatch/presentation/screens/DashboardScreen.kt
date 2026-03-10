@@ -29,7 +29,9 @@ fun DashboardScreen(
     onNavigateToEditPet: (Int, String, String, Int) -> Unit,
     onNavigateToEditHome: (Int, String, String, Int, String) -> Unit,
     onNavigateToAssign: (Int, String) -> Unit,
-    onNavigateToHealth: (Int, String) -> Unit // <--- Añadir esto
+    onNavigateToHealth: (Int, String) -> Unit,      // Feature F03
+    onToggleInterest: (Int, Boolean) -> Unit,       // Feature F02
+    onNavigateToInterests: (Int, String) -> Unit     // Feature F02
 ) {
     // OPTIMIZACIÓN: collectAsStateWithLifecycle ahorra batería en segundo plano
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -109,7 +111,9 @@ fun DashboardScreen(
                                 onEdit = { onNavigateToEditPet(it.id, it.nombre, it.especie, it.edad) },
                                 onDelete = { itemToDeleteId = it; showDeleteDialog = true },
                                 onAssignClick = onNavigateToAssign,
-                                onHealthClick = onNavigateToHealth // <--- Pasar aquí
+                                onHealthClick = onNavigateToHealth, // Conectado a F03
+                                onToggleInterest = { onToggleInterest(pet.id, pet.isInterested) }, // Conectado a F02
+                                onViewInterests = onNavigateToInterests // Conectado a F02
                             )
                         }
                     } else {

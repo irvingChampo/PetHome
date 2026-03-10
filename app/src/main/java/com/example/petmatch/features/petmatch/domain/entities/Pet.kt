@@ -7,5 +7,6 @@ data class Pet(
     val edad: Int,
     val estadoSalud: String,
     val estado: String,
-    val fotoUrl: String?
+    val fotoUrl: String?,
+    val isInterested: Boolean = false // <--- AGREGAR ESTA LÍNEA
 )

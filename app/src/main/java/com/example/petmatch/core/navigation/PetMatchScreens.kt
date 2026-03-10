@@ -19,7 +19,10 @@ sealed class PetMatchScreens {
     @Serializable
     data class AssignPet(val petId: Int, val petName: String)
 
-    // NUEVA RUTA: Historial de Salud
     @Serializable
     data class HealthHistory(val petId: Int, val petName: String)
+
+    // NUEVA RUTA: Ver interesados en una mascota
+    @Serializable
+    data class PetInterests(val petId: Int, val petName: String)
 }

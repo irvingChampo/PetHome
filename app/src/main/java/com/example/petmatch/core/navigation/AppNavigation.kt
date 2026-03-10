@@ -9,8 +9,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.petmatch.features.auth.presentation.screens.*
 import com.example.petmatch.features.petmatch.presentation.screens.*
-import com.example.petmatch.features.health.presentation.screens.PetHealthScreen // Import nuevo
+import com.example.petmatch.features.health.presentation.screens.PetHealthScreen
+import com.example.petmatch.features.interest.presentation.screens.PetInterestsScreen // Import nuevo
 import com.example.petmatch.features.petmatch.presentation.viewmodels.DashboardViewModel
+import com.example.petmatch.features.interest.presentation.viewmodels.InterestViewModel // Import nuevo
 
 @Composable
 fun AppNavigation() {
@@ -39,80 +41,52 @@ fun AppNavigation() {
             )
         }
 
-        composable<PetMatchScreens.Dashboard> {
+        composable<PetMatchScreens.Dashboard> { backStackEntry ->
+            val interestViewModel: InterestViewModel = hiltViewModel() // Para el corazón
+
             DashboardScreen(
                 onNavigateToAddPet = { navController.navigate(PetMatchScreens.AddPet) },
                 onNavigateToAddHome = { navController.navigate(PetMatchScreens.AddHome) },
-                onNavigateToEditPet = { id, n, s, a ->
-                    navController.navigate(PetMatchScreens.EditPet(id, n, s, a))
-                },
-                onNavigateToEditHome = { id, n, d, c, t ->
-                    navController.navigate(PetMatchScreens.EditHome(id, n, d, c, t))
-                },
-                onNavigateToAssign = { id, name ->
-                    navController.navigate(PetMatchScreens.AssignPet(id, name))
-                },
-                onNavigateToHealth = { id, name -> // Nueva navegación a salud
-                    navController.navigate(PetMatchScreens.HealthHistory(id, name))
-                }
+                onNavigateToEditPet = { id, n, s, a -> navController.navigate(PetMatchScreens.EditPet(id, n, s, a)) },
+                onNavigateToEditHome = { id, n, d, c, t -> navController.navigate(PetMatchScreens.EditHome(id, n, d, c, t)) },
+                onNavigateToAssign = { id, name -> navController.navigate(PetMatchScreens.AssignPet(id, name)) },
+                onNavigateToHealth = { id, name -> navController.navigate(PetMatchScreens.HealthHistory(id, name)) },
+                // NUEVAS ACCIONES F02
+                onToggleInterest = { petId, status -> interestViewModel.toggleInterest(petId, status) },
+                onNavigateToInterests = { id, name -> navController.navigate(PetMatchScreens.PetInterests(id, name)) }
             )
         }
 
-        composable<PetMatchScreens.AddPet> {
-            PetFormScreen(onBack = { navController.popBackStack() })
-        }
+        composable<PetMatchScreens.AddPet> { PetFormScreen(onBack = { navController.popBackStack() }) }
 
         composable<PetMatchScreens.EditPet> { backStackEntry ->
             val args = backStackEntry.toRoute<PetMatchScreens.EditPet>()
-            PetFormScreen(
-                petId = args.id,
-                initialName = args.name,
-                initialSpecie = args.specie,
-                initialAge = args.age.toString(),
-                onBack = { navController.popBackStack() }
-            )
+            PetFormScreen(petId = args.id, initialName = args.name, initialSpecie = args.specie, initialAge = args.age.toString(), onBack = { navController.popBackStack() })
         }
 
-        composable<PetMatchScreens.AddHome> {
-            HomeFormScreen(onBack = { navController.popBackStack() })
-        }
+        composable<PetMatchScreens.AddHome> { HomeFormScreen(onBack = { navController.popBackStack() }) }
 
         composable<PetMatchScreens.EditHome> { backStackEntry ->
             val args = backStackEntry.toRoute<PetMatchScreens.EditHome>()
-            HomeFormScreen(
-                homeId = args.id,
-                initialName = args.name,
-                initialDir = args.dir,
-                initialCap = args.cap.toString(),
-                initialType = args.type,
-                onBack = { navController.popBackStack() }
-            )
+            HomeFormScreen(homeId = args.id, initialName = args.name, initialDir = args.dir, initialCap = args.cap.toString(), initialType = args.type, onBack = { navController.popBackStack() })
         }
 
         composable<PetMatchScreens.AssignPet> { backStackEntry ->
             val args = backStackEntry.toRoute<PetMatchScreens.AssignPet>()
-
-            val dashboardEntry = remember(backStackEntry) {
-                navController.getBackStackEntry(PetMatchScreens.Dashboard)
-            }
+            val dashboardEntry = remember(backStackEntry) { navController.getBackStackEntry(PetMatchScreens.Dashboard) }
             val sharedDashboardViewModel: DashboardViewModel = hiltViewModel(dashboardEntry)
-
-            AssignPetScreen(
-                petId = args.petId,
-                petName = args.petName,
-                dashboardViewModel = sharedDashboardViewModel,
-                onBack = { navController.popBackStack() }
-            )
+            AssignPetScreen(petId = args.petId, petName = args.petName, dashboardViewModel = sharedDashboardViewModel, onBack = { navController.popBackStack() })
         }
 
-        // NUEVA RUTA: Pantalla de Historial Clínico
         composable<PetMatchScreens.HealthHistory> { backStackEntry ->
             val args = backStackEntry.toRoute<PetMatchScreens.HealthHistory>()
-            PetHealthScreen(
-                petId = args.petId,
-                petName = args.petName,
-                onBack = { navController.popBackStack() }
-            )
+            PetHealthScreen(petId = args.petId, petName = args.petName, onBack = { navController.popBackStack() })
+        }
+
+        // NUEVA RUTA: Interesados
+        composable<PetMatchScreens.PetInterests> { backStackEntry ->
+            val args = backStackEntry.toRoute<PetMatchScreens.PetInterests>()
+            PetInterestsScreen(petId = args.petId, petName = args.petName, onBack = { navController.popBackStack() })
         }
     }
 }
