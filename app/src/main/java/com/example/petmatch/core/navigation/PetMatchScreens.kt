@@ -2,7 +2,6 @@ package com.example.petmatch.core.navigation
 
 import kotlinx.serialization.Serializable
 
-// Definimos las rutas como objetos o clases serializables
 @Serializable
 sealed class PetMatchScreens {
     @Serializable object Login
@@ -11,27 +10,16 @@ sealed class PetMatchScreens {
     @Serializable object AddPet
     @Serializable object AddHome
 
-    // Las rutas con parámetros ahora son data classes
     @Serializable
-    data class EditPet(
-        val id: Int,
-        val name: String,
-        val specie: String,
-        val age: Int
-    )
+    data class EditPet(val id: Int, val name: String, val specie: String, val age: Int)
 
     @Serializable
-    data class EditHome(
-        val id: Int,
-        val name: String,
-        val dir: String,
-        val cap: Int,
-        val type: String
-    )
+    data class EditHome(val id: Int, val name: String, val dir: String, val cap: Int, val type: String)
 
     @Serializable
-    data class AssignPet(
-        val petId: Int,
-        val petName: String
-    )
+    data class AssignPet(val petId: Int, val petName: String)
+
+    // NUEVA RUTA: Historial de Salud
+    @Serializable
+    data class HealthHistory(val petId: Int, val petName: String)
 }

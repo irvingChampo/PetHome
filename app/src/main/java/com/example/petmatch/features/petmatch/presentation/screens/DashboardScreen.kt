@@ -28,7 +28,8 @@ fun DashboardScreen(
     onNavigateToAddHome: () -> Unit,
     onNavigateToEditPet: (Int, String, String, Int) -> Unit,
     onNavigateToEditHome: (Int, String, String, Int, String) -> Unit,
-    onNavigateToAssign: (Int, String) -> Unit
+    onNavigateToAssign: (Int, String) -> Unit,
+    onNavigateToHealth: (Int, String) -> Unit // <--- Añadir esto
 ) {
     // OPTIMIZACIÓN: collectAsStateWithLifecycle ahorra batería en segundo plano
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -107,7 +108,8 @@ fun DashboardScreen(
                                 isAdmin = isAdmin,
                                 onEdit = { onNavigateToEditPet(it.id, it.nombre, it.especie, it.edad) },
                                 onDelete = { itemToDeleteId = it; showDeleteDialog = true },
-                                onAssignClick = onNavigateToAssign
+                                onAssignClick = onNavigateToAssign,
+                                onHealthClick = onNavigateToHealth // <--- Pasar aquí
                             )
                         }
                     } else {
