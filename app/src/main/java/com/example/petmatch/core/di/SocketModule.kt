@@ -2,7 +2,8 @@ package com.example.petmatch.core.di
 
 import com.example.petmatch.core.socket.PetMatchSocketManager
 import com.example.petmatch.features.petmatch.data.datasources.local.dao.PetMatchDao
-import com.example.petmatch.features.health.data.datasources.local.dao.HealthDao // Nuevo import
+import com.example.petmatch.features.health.data.datasources.local.dao.HealthDao
+import com.example.petmatch.features.interest.data.datasources.local.dao.InterestDao // Nuevo import
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,8 +18,9 @@ object SocketModule {
     @Singleton
     fun provideSocketManager(
         petMatchDao: PetMatchDao,
-        healthDao: HealthDao // Inyectamos el nuevo DAO
+        healthDao: HealthDao,
+        interestDao: InterestDao // Inyectamos el nuevo DAO de intereses
     ): PetMatchSocketManager {
-        return PetMatchSocketManager(petMatchDao, healthDao)
+        return PetMatchSocketManager(petMatchDao, healthDao, interestDao)
     }
 }
